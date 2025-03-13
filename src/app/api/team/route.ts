@@ -14,7 +14,8 @@ export async function GET(req: Request) {
     // Busca o time atual do usuário
     const teamMember = await prisma.teamMember.findFirst({
       where: {
-        userId: session.user.id
+        userId: session.user.id,
+        status: "ACTIVE"
       },
       include: {
         team: true
@@ -36,6 +37,53 @@ export async function GET(req: Request) {
     return NextResponse.json({ team })
   } catch (error) {
     console.error("[TEAM_GET]", error)
+    return new NextResponse("Internal Error", { status: 500 })
+  }
+}
+
+export async function PATCH(req: Request) {
+  try {
+    const session = await getServerSession(authOptions)
+
+    if (!session?.user) {
+      return new NextResponse("Unauthorized", { status: 401 })
+    }
+
+    const body = await req.json()
+    const { name } = body
+
+    if (!name) {
+      return new NextResponse("Name is required", { status: 400 })
+    }
+
+    // Busca o time atual do usuário onde ele é OWNER ou ADMIN
+    const member = await prisma.teamMember.findFirst({
+      where: {
+        userId: session.user.id,
+        status: "ACTIVE",
+        role: {
+          in: ["OWNER", "ADMIN"]
+        }
+      }
+    })
+
+    if (!member) {
+      return new NextResponse("Team not found or unauthorized", { status: 404 })
+    }
+
+    // Atualiza o nome do time
+    const updatedTeam = await prisma.team.update({
+      where: {
+        id: member.teamId,
+      },
+      data: {
+        name
+      }
+    })
+
+    return NextResponse.json({ team: updatedTeam })
+  } catch (error) {
+    console.error("[TEAM_PATCH]", error)
     return new NextResponse("Internal Error", { status: 500 })
   }
 }

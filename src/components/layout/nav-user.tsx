@@ -54,7 +54,7 @@ const ThemeSelector = memo(function ThemeSelector() {
 
   return (
     <DropdownMenuItem
-      className="cursor-default bg-transparent hover:bg-transparent focus:bg-transparent"
+      className="cursor-default bg-transparen hover:bg-transparent focus:bg-transparent"
       asChild
     >
       <div className="flex justify-between items-center">
@@ -128,7 +128,7 @@ export const NavUser = memo(function NavUser({ user }: NavUserProps) {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href="/app/profile" className="cursor-pointer text-muted-foreground">
+          <Link href="/profile" className="cursor-pointer text-muted-foreground">
             <span>Profile</span>
             <DropdownMenuShortcut>
               <User className="size-4" />

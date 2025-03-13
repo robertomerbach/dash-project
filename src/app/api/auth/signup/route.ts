@@ -48,7 +48,7 @@ export async function POST(req: Request) {
       teamId: result.team.id
     })
   } catch (error) {
-    console.error("Error in signup:", error)
+    console.error("Error in register:", error)
     return NextResponse.json(
       { error: "Error creating user" },
       { status: 500 }

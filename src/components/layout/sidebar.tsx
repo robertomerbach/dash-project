@@ -1,7 +1,6 @@
 "use client"
 
 import React, { memo } from "react"
-import Link from "next/link"
 
 import {
   Cable,
@@ -10,7 +9,6 @@ import {
   HelpCircle,
   House,
   Settings,
-  Users,
   Zap,
 } from "lucide-react"
 
@@ -29,27 +27,28 @@ import Logo from "./logo"
 
 const navData = {
   navMain: [
-    { title: "Dashboard", url: "/app", icon: House },
-    { title: "Insights", url: "/app/insights", icon: Zap },
+    { title: "Dashboard", url: "/overview", icon: House },
+    { title: "Insights", url: "/insights", icon: Zap },
     {
       title: "Reports",
       url: "#",
       icon: ChartColumnIncreasing,
       items: [
-        { title: "By Sites", url: "/app/reports/sites" },
-        { title: "By Sources", url: "/app/reports/sources" },
-        { title: "By Countries", url: "/app/reports/countries" },
-        { title: "By Campaigns", url: "/app/reports/campaigns" },
-        { title: "By Users", url: "/app/reports/users" },
+        { title: "By Sites", url: "/reports/sites" },
+        { title: "By Sources", url: "/reports/sources" },
+        { title: "By Countries", url: "/reports/countries" },
+        { title: "By Campaigns", url: "/reports/campaigns" },
+        { title: "By Users", url: "/reports/users" },
       ],
     },
-    { title: "Team", url: "/app/settings/team", icon: Users },
-    { title: "Sites", url: "/app/settings/sites", icon: Globe },
-    { title: "Integrations", url: "/app/settings/integrations", icon: Cable },
+  ],
+  navSettings: [
+    { title: "Sites", url: "/sites", icon: Globe },
+    { title: "Integrations", url: "/integrations", icon: Cable },
   ],
   navFooter: [
     { title: "Help", url: "#", icon: HelpCircle },
-    { title: "Settings", url: "/app/settings/general", icon: Settings },
+    { title: "Settings", url: "/settings", icon: Settings },
   ],
 };
 
@@ -70,10 +69,11 @@ const AppSidebarComponent = (props: React.ComponentProps<typeof Sidebar>) => (
     </SidebarHeader>
     <SidebarContent className="pt-2">
       <NavSidebar items={navData.navMain} />
+      <NavSidebar items={navData.navSettings} />
     </SidebarContent>
     <SidebarFooter>
       <Separator />
-      <NavSidebar items={navData.navFooter} />
+      <NavSidebar className="p-0" items={navData.navFooter} />
     </SidebarFooter>
   </Sidebar>
 );

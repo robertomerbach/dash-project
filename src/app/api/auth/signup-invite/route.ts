@@ -75,7 +75,7 @@ export async function POST(req: Request) {
       }
     })
   } catch (error) {
-    console.error("Error in signup-invite:", error)
+    console.error("Error in register-invite:", error)
     return NextResponse.json(
       { error: "Error creating user" },
       { status: 500 }

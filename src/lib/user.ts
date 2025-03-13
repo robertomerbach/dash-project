@@ -10,10 +10,48 @@ import { generateToken } from "./utils"
 export type UserRole = "OWNER" | "MEMBER" | "ADMIN"
 export type UserStatus = "PENDING" | "ACTIVE"
 
+export type User = {
+  id: string
+  name: string | null
+  email: string | null
+  image?: string | null
+  role?: UserRole
+  status?: UserStatus
+  createdAt: Date
+}
+
 export interface InviteUserData {
   name: string
   email: string
   role: UserRole
+  teamId: string
+}
+
+export async function getTeamUsers(teamId: string) {
+  const session = await getServerSession(authOptions)
+
+  if (!session?.user) {
+    throw new Error("Unauthorized")
+  }
+
+  const teamUsers = await prisma.teamMember.findMany({
+    where: {
+      teamId
+    },
+    include: {
+      user: true
+    }
+  })
+
+  return teamUsers.map(tu => ({
+    id: tu.id,
+    name: tu.user?.name || tu.inviteEmail,
+    email: tu.user?.email || tu.inviteEmail,
+    image: tu.user?.image,
+    role: tu.role,
+    status: tu.status,
+    createdAt: tu.createdAt
+  })) as User[]
 }
 
 export async function inviteUser(data: InviteUserData) {
@@ -23,26 +61,10 @@ export async function inviteUser(data: InviteUserData) {
     throw new Error("Unauthorized")
   }
 
-  // Get current team
-  const teamMember = await prisma.teamMember.findFirst({
-    where: {
-      userId: session.user.id,
-      status: "ACTIVE"
-    },
-    select: {
-      teamId: true,
-      team: true
-    }
-  })
-
-  if (!teamMember) {
-    throw new Error("No active team found")
-  }
-
   // Verificar se o usuário já existe no time
   const existingMember = await prisma.teamMember.findFirst({
     where: {
-      teamId: teamMember.teamId,
+      teamId: data.teamId,
       OR: [
         { inviteEmail: data.email },
         {
@@ -72,24 +94,37 @@ export async function inviteUser(data: InviteUserData) {
   const invite = await prisma.teamMember.create({
     data: {
       role: data.role,
-      teamId: teamMember.teamId,
+      teamId: data.teamId,
       inviteEmail: data.email,
       inviteToken: token,
       inviteExpires: expires,
       status: "PENDING",
       userId: existingUser?.id || undefined
+    },
+    include: {
+      team: true
     }
   })
 
+  // Buscar o nome do time
+  const team = await prisma.team.findUnique({
+    where: { id: data.teamId },
+    select: { name: true }
+  })
+
+  if (!team) {
+    throw new Error("Team not found")
+  }
+
   // Gerar URL de convite
-  const inviteUrl = `${process.env.NEXTAUTH_URL}/signup?token=${token}&email=${data.email}`
+  const inviteUrl = `${process.env.NEXTAUTH_URL}/register?token=${token}&email=${data.email}`
 
   // Enviar email de convite
   await sendInviteEmail({
     email: data.email,
     name: data.name,
     inviteUrl,
-    teamName: teamMember.team.name
+    teamName: team.name
   })
 
   return {
@@ -97,12 +132,11 @@ export async function inviteUser(data: InviteUserData) {
     name: data.name,
     email: data.email,
     role: data.role,
-    status: "PENDING",
-    createdAt: invite.createdAt
-  }
+    status: "PENDING"
+  } as User
 }
 
-export async function updateUser(id: string, data: { role: UserRole }) {
+export async function updateUser(id: string, data: Partial<User>) {
   const session = await getServerSession(authOptions)
 
   if (!session?.user) {
@@ -122,13 +156,13 @@ export async function updateUser(id: string, data: { role: UserRole }) {
   })
 
   return {
-    id: teamMember.id,
-    name: teamMember.user?.name || teamMember.inviteEmail,
-    email: teamMember.user?.email || teamMember.inviteEmail,
+    id: teamMember.user?.id || "",
+    name: teamMember.user?.name || "",
+    email: teamMember.user?.email || "",
     role: teamMember.role,
     status: teamMember.status,
     createdAt: teamMember.createdAt
-  }
+  } as User
 }
 
 export async function removeUser(id: string) {

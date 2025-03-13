@@ -13,7 +13,7 @@ export function AppHeader() {
   const { team, isLoading } = useTeam()
 
   return (
-    <header className="sticky bg-background/60 backdrop-blur border-b z-30 top-0">
+    <header className="sticky bg-background/60 backdrop-blur z-30 top-0">
       <div className="flex h-16 shrink-0 items-center justify-between gap-2 px-8 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 ">
         <div className="flex items-center gap-2">
           <SidebarTrigger size="icon" className="cursor-pointer -ml-1.5" />

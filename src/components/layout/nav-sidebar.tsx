@@ -20,6 +20,7 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
+import { cn } from "@/lib/utils";
 
 interface SubItem {
   title: string;
@@ -44,16 +45,22 @@ const SimpleNavItem = memo(
   ({
     item,
     pathname,
+    className,
   }: {
     item: NavItem;
     pathname: string;
+    className?: string;
   }) => {
     const isActive = pathname === item.url;
     return (
       <SidebarMenuItem>
         <SidebarMenuButton
           tooltip={item.title}
-          className={isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""}
+          className={cn(
+            isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : "",
+            "rounded-md",
+            className,
+          )}
           asChild
         >
           <Link href={item.url}>

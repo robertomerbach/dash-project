@@ -78,7 +78,7 @@ export default function LoginPage() {
         return
       }
 
-      router.push("/app")
+      router.push("/overview")
       router.refresh()
     } catch (error) {
       toast.error("Something went wrong.")
@@ -92,7 +92,7 @@ export default function LoginPage() {
       <div className="space-y-1.5">
         <h2 className="text-center md:text-start text-2xl font-bold">Log in to Arena</h2>
         <p className="text-center md:text-start text-sm text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 [&_a]:text-primary">
-          Don&apos;t have an account?{" "}<Link href="/signup">Sign up</Link>
+          Don&apos;t have an account?{" "}<Link href="/register">Sign up</Link>
         </p>
       </div>
       <Form {...form}>

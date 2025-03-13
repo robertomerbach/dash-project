@@ -1,0 +1,169 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Model of User
+model User {
+  id              String         @id @default(cuid())
+  name            String?
+  email           String?        @unique
+  emailVerified   DateTime?
+  password        String?
+  image           String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  resetToken      String?        @unique
+  resetTokenExpires DateTime?
+  accounts        Account[]
+  sessions        Session[]
+  teamMembers     TeamMember[]   // Relationship with teams
+  siteUsers       SiteUser[]     // Relationship with sites
+  subscription    Subscription?  // User subscription
+}
+
+// Model of Account (Auth.js)
+model Account {
+  id                String   @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?  @db.Text
+  access_token      String?  @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?  @db.Text
+  session_state     String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+// Model of Session (Auth.js)
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Model of Team
+model Team {
+  id              String        @id @default(cuid())
+  name            String
+  allowedDomains  String?       // Allowed email domains for automatic invitations
+  language        String        @default("en")
+  timezone        String        @default("America/New_York")
+  autoTimezone    Boolean       @default(true)
+  currency        String        @default("USD")
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  members         TeamMember[]  // Team members
+  sites           Site[]        // Sites of the team
+
+  @@map("teams")
+}
+
+// Model of Association of User to Team
+model TeamMember {
+  id             String    @id @default(cuid())
+  userId         String?   // Agora é opcional
+  teamId         String
+  role           UserRole  // OWNER, ADMIN, MEMBER
+  status         UserStatus // PENDING, ACTIVE
+  inviteEmail    String?   // Email used for invitation (can be different from the registered email)
+  inviteToken    String?   @unique // Token to validate invitations
+  inviteExpires  DateTime? // Invitation expiration
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  user           User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team           Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, teamId])
+  @@map("team_members")
+}
+
+// Model of Site
+model Site {
+  id          String      @id @default(cuid())
+  name        String
+  url         String      @unique
+  status      SiteStatus  // ACTIVE, INACTIVE
+  teamId      String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  team        Team        @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  users       SiteUser[]  // Users with access to the site
+
+  @@map("sites")
+}
+
+// Model of Association of User to Site
+model SiteUser {
+  id         String    @id @default(cuid())
+  userId     String
+  siteId     String
+  role       UserRole  // Permissions specific to this site
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  site       Site      @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, siteId])
+}
+
+// Model of Subscription
+model Subscription {
+  id              String            @id @default(cuid())
+  userId          String            @unique
+  plan            SubscriptionPlan
+  maxAdsSites     Int
+  maxMetricSites  Int
+  startDate       DateTime          @default(now())
+  endDate         DateTime?
+  status          SubscriptionStatus @default(ACTIVE)
+  stripeCustomerId String?           @unique
+  stripeSubscriptionId String?       @unique
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Enums
+enum UserRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum UserStatus {
+  PENDING
+  EXPIRED
+  ACTIVE
+}
+
+enum SiteStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum SubscriptionPlan {
+  BASIC
+  INTERMEDIATE
+  UNLIMITED
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELED
+  EXPIRED
+}

@@ -13,11 +13,11 @@ interface NavSettingsItem {
 }
 
 const SettingsItems: NavSettingsItem[] = [
-  { title: "General", href: "/app/settings/general" },
-  { title: "Team", href: "/app/settings/team" },
-  { title: "Sites", href: "/app/settings/sites" },
-  { title: "Billing", href: "/app/settings/billing" },
-  { title: "Integrations", href: "/app/settings/integrations" },
+  { title: "General", href: "/settings/general" },
+  { title: "Team", href: "/settings/team" },
+  { title: "Sites", href: "/settings/sites" },
+  { title: "Billing", href: "/settings/billing" },
+  { title: "Integrations", href: "/settings/integrations" },
 ];
 
 function SettingsNavComponent() {

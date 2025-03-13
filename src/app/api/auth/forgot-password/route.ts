@@ -58,7 +58,7 @@ export async function POST(request: Request) {
               color: #333;
             }
             .container {
-              max-width: 600px;
+              max-width: 564px;
               margin: 0 auto;
               padding: 20px;
             }
@@ -66,7 +66,8 @@ export async function POST(request: Request) {
               display: inline-block;
               padding: 12px 24px;
               background-color: #0070f3;
-              color: white;
+              color: white !important;
+              width: 100%;
               text-decoration: none;
               border-radius: 5px;
               margin: 20px 0;

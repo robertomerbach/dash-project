@@ -15,7 +15,7 @@ export const config = {
 };
 
 // Rotas que não precisam de autenticação
-const publicRoutes = ['/login', '/signup', '/confirm-account', '/forgot-password', '/change-password']
+const publicRoutes = ['/login', '/register', '/confirm-account', '/forgot-password', '/change-password']
 
 export default async function middleware(req: NextRequest) {
   const url = req.nextUrl;
@@ -45,7 +45,7 @@ export default async function middleware(req: NextRequest) {
   // // rewrites for app pages
   // if (hostname === `app.${process.env.NEXT_PUBLIC_ROOT_DOMAIN}`) {
   //   return NextResponse.rewrite(
-  //     new URL(`/app${path === "/" ? "" : path}`, req.url)
+  //     new URL(`/app${path === "/overview" ? "" : path}`, req.url)
   //   );
   // }
 

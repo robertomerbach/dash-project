@@ -40,7 +40,7 @@ export function ButtonRefresh() {
       // Revalidar todas as chaves SWR relevantes
       await Promise.all([
         // Revalidar dados dos sites
-        mutate(`/api/team/sites`),
+        mutate(`/api/sites`),
         // Aqui você pode adicionar outras chaves SWR que precisam ser revalidadas
       ])
       setLastUpdate(new Date())

@@ -1,121 +1,92 @@
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
-import { randomBytes } from "crypto"
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+import { randomBytes } from "crypto";
 
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+// Formatadores memorizados para reutilização
+const currencyFormatter = new Intl.NumberFormat('pt-BR', {
+  style: 'currency',
+  currency: 'BRL',
+});
+
+const numberFormatter = new Intl.NumberFormat('pt-BR');
+
+/**
+ * Combine class names with clsx and tailwind-merge
+ */
+export function cn(...inputs: ClassValue[]): string {
+  return twMerge(clsx(inputs));
 }
 
+/**
+ * Format a number as BRL currency
+ */
 export function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value);
+  return currencyFormatter.format(value);
 }
 
+/**
+ * Format a number with Brazilian locale
+ */
 export function formatNumber(value: number): string {
-  return new Intl.NumberFormat('pt-BR').format(value);
+  return numberFormatter.format(value);
 }
 
+/**
+ * Calculate percentage change between two values
+ */
 export function calculatePercentageChange(previous: number, current: number): number {
   if (previous === 0) return current === 0 ? 0 : 100;
-  return Number(((current - previous) / previous * 100).toFixed(1));
+  
+  // Use Math.round for better performance than toFixed+Number conversion
+  return Math.round((current - previous) / previous * 1000) / 10;
 }
 
+// Character sets para geração de senha
+const CHARS = {
+  lowercase: "abcdefghijklmnopqrstuvwxyz",
+  uppercase: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+  numbers: "0123456789",
+  special: "!@#$%^&*"
+};
+
+/**
+ * Generate a secure random password with guaranteed character types
+ */
 export function generatePassword(length: number = 12): string {
-  const lowercase = "abcdefghijklmnopqrstuvwxyz"
-  const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-  const numbers = "0123456789"
-  const special = "!@#$%^&*"
-  
-  let password = ""
-  password += lowercase[Math.floor(Math.random() * lowercase.length)]
-  password += uppercase[Math.floor(Math.random() * uppercase.length)]
-  password += numbers[Math.floor(Math.random() * numbers.length)]
-  password += special[Math.floor(Math.random() * special.length)]
-  
-  const charset = lowercase + uppercase + numbers + special
-  for (let i = password.length; i < length; i++) {
-    password += charset[Math.floor(Math.random() * charset.length)]
+  if (length < 4) {
+    throw new Error("Password length must be at least 4 characters");
   }
-
-  return password.split('').sort(() => Math.random() - 0.5).join('')
+  
+  // Garantir pelo menos um caractere de cada tipo
+  const password = [
+    CHARS.lowercase[Math.floor(Math.random() * CHARS.lowercase.length)],
+    CHARS.uppercase[Math.floor(Math.random() * CHARS.uppercase.length)],
+    CHARS.numbers[Math.floor(Math.random() * CHARS.numbers.length)],
+    CHARS.special[Math.floor(Math.random() * CHARS.special.length)]
+  ];
+  
+  // Concatenar todos os tipos de caracteres
+  const allChars = CHARS.lowercase + CHARS.uppercase + CHARS.numbers + CHARS.special;
+  const remainingLength = length - password.length;
+  
+  // Preencher o restante da senha
+  for (let i = 0; i < remainingLength; i++) {
+    password.push(allChars[Math.floor(Math.random() * allChars.length)]);
+  }
+  
+  // Fisher-Yates shuffle para melhor aleatoriedade
+  for (let i = password.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [password[i], password[j]] = [password[j], password[i]];
+  }
+  
+  return password.join('');
 }
 
-// export function groupDataByDate(data: Metrics[], dateRange: DateRange): Metrics[] {
-//   if (!dateRange.from || !dateRange.to) {
-//     return []
-//   }
-
-//   // Criar um objeto com todas as datas do intervalo
-//   const allDates: Record<string, Metrics> = {}
-  
-//   // Preencher todas as datas do intervalo
-//   let currentDate = dateRange.from
-//   while (currentDate <= dateRange.to) {
-//     const dateStr = format(currentDate, 'dd-MM-yyyy')
-//     allDates[dateStr] = {
-//       id: dateStr,
-//       date: dateStr,
-//       impressions: 0,
-//       clicks: 0,
-//       ctr: 0,
-//       cpc: 0,
-//       cost: 0,
-//       revenue: 0,
-//       profit: 0,
-//       ad_impressions: 0,
-//       ad_clicks: 0,
-//       ad_ctr: 0,
-//       ecpm: 0
-//     }
-//     currentDate = addDays(currentDate, 1)
-//   }
-
-//   // Somar os dados existentes
-//   const grouped = data.reduce((acc, current) => {
-//     const date = format(new Date(current.date), 'dd-MM-yyyy')
-    
-//     if (!acc[date]) {
-//       acc[date] = {
-//         id: date,
-//         date: date,
-//         impressions: 0,
-//         clicks: 0,
-//         ctr: 0,
-//         cpc: 0,
-//         cost: 0,
-//         revenue: 0,
-//         profit: 0,
-//         ad_impressions: 0,
-//         ad_clicks: 0,
-//         ad_ctr: 0,
-//         ecpm: 0
-//       }
-//     }
-    
-//     acc[date].impressions += current.impressions || 0
-//     acc[date].clicks += current.clicks || 0
-//     acc[date].cost += current.cost || 0
-//     acc[date].revenue += current.revenue || 0
-//     acc[date].profit += current.profit || 0
-//     acc[date].ad_impressions += current.ad_impressions || 0
-//     acc[date].ad_clicks += current.ad_clicks || 0
-    
-//     acc[date].ctr = (acc[date].clicks / acc[date].impressions) * 100 || 0
-//     acc[date].cpc = acc[date].cost / acc[date].clicks || 0
-//     acc[date].ad_ctr = (acc[date].ad_clicks / acc[date].ad_impressions) * 100 || 0
-//     acc[date].ecpm = (acc[date].revenue / acc[date].impressions) * 1000 || 0
-
-//     return acc
-//   }, allDates)
-
-//   return Object.values(grouped).sort((a, b) => 
-//     new Date(b.date.split('-').reverse().join('-')).getTime() - 
-//     new Date(a.date.split('-').reverse().join('-')).getTime()
-//   )
-// }
-
+/**
+ * Generate a cryptographically secure token
+ */
 export function generateToken(length: number = 32): string {
-  return randomBytes(length).toString('hex')
+  // A função randomBytes gera bytes, então ajustamos para obter o comprimento hex correto
+  return randomBytes(Math.ceil(length / 2)).toString('hex').slice(0, length);
 }
