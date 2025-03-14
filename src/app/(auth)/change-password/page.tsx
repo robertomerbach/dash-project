@@ -60,7 +60,7 @@ export default function ChangePasswordPage({ searchParams }: Props) {
       }
 
       try {
-        const response = await fetch("/api/auth/validate-token", {
+        const response = await fetch("/api/auth/token", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -106,7 +106,7 @@ export default function ChangePasswordPage({ searchParams }: Props) {
     setIsLoading(true)
 
     try {
-      const response = await fetch("/api/auth/reset-password", {
+      const response = await fetch("/api/auth/password", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
