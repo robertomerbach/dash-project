@@ -11,7 +11,7 @@ export default function AdsenseSites() {
   useEffect(() => {
     async function fetchSites() {
       try {
-        const response = await axios.get("/api/adsense");
+        const response = await axios.get("/api/integrations/adsense");
         console.log(response.data);
         setSites(response.data.sites || []);
       } catch (err) {

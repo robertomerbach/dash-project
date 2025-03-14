@@ -4,7 +4,7 @@ import { Table } from "@tanstack/react-table"
 import { X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { ViewOptions } from "../../settings/sites/view-options" 
+import { ViewOptions } from "./view-options" 
 import { FacetedFilter } from "./faceted-filter"
 
 import { SearchFilter } from "./search-filter"

@@ -40,7 +40,7 @@ interface Props {
   }>
 }
 
-export default function ChangePasswordPage({ searchParams }: Props) {
+export default function ResetPasswordPage({ searchParams }: Props) {
   const params = use(searchParams)
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)

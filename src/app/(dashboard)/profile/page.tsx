@@ -25,6 +25,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useRouter } from "next/navigation"
 
 // Schema de validação para o email
 const emailFormSchema = z.object({
@@ -47,6 +48,7 @@ export default function ProfilePage() {
   const { data: session, update } = useSession()
   const [isUpdatingEmail, setIsUpdatingEmail] = useState(false)
   const [isUpdatingName, setIsUpdatingName] = useState(false)
+  const router = useRouter()
 
   const emailForm = useForm<EmailFormValues>({
     resolver: zodResolver(emailFormSchema),
@@ -204,7 +206,7 @@ export default function ProfilePage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button variant="outline" onClick={() => window.location.href = "/change-password"}>
+          <Button variant="outline" onClick={() => router.push("/reset-password")}>
             Change password
           </Button>
         </CardContent>

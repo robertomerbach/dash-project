@@ -12,14 +12,14 @@ type TeamResponse = {
 }
 
 async function getTeam() {
-  const response = await fetch(`/api/team`)
+  const response = await fetch(`/api/users/teams'`)
   if (!response.ok) throw new Error("Failed to fetch team")
   return response.json()
 }
 
 export function useTeam() {
   const { data, error, isLoading, mutate } = useSWR<TeamResponse>(
-    `/api/team`,
+    `/api/users/teams'`,
     getTeam
   )
 

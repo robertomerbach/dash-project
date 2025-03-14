@@ -12,7 +12,7 @@ interface ApiResponse {
 }
 
 export async function fetchAdAccounts(): Promise<ApiResponse> {
-    const res = await fetch('/api/facebook');
+    const res = await fetch('/api/integrations/facebook');
     console.log(res);
     if (!res.ok) {
         throw new Error('Erro ao carregar contas de anúncios');

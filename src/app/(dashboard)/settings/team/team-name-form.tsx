@@ -34,7 +34,7 @@ export function TeamNameForm() {
   const fetchTeamName = useCallback(async () => {
     try {
       setIsFetching(true)
-      const response = await fetch('/api/team')
+      const response = await fetch('/api/users/teams')
       
       if (!response.ok) {
         throw new Error("Failed to fetch team name")
@@ -56,7 +56,7 @@ export function TeamNameForm() {
   async function onSubmit(values: FormValues) {
     try {
       setIsLoading(true)
-      const response = await fetch(`/api/team`, {
+      const response = await fetch(`/api/users/teams'`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

@@ -15,7 +15,7 @@ export const config = {
 };
 
 // Rotas que não precisam de autenticação
-const publicRoutes = ['/login', '/register', '/confirm-account', '/forgot-password', '/change-password']
+const publicRoutes = ['/login', '/register', '/confirm-account', '/forgot-password', '/reset-password']
 
 export default async function middleware(req: NextRequest) {
   const url = req.nextUrl;

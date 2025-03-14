@@ -52,7 +52,7 @@ export default function AdSenseSitesList({ accountId, credentials }: AdSenseSite
           params.append('refresh_token', process.env.GOOGLE_REFRESH_TOKEN || "");
         }
         
-        const response = await fetch(`/api/adsense?${params}`);
+        const response = await fetch(`/api/integrations/adsense?${params}`);
         const data: SitesApiResponse = await response.json();
 
         if (!response.ok) {

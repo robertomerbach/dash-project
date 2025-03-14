@@ -16,7 +16,7 @@ interface SitesResponse {
 // Hook reutilizável para buscar dados dos sites
 export function useSites() {
   const { data, error, isLoading, mutate } = useSWR<SitesResponse>(
-    `/api/sites`,
+    `/api/users/sites`,
     async (url: any) => {
       const res = await fetch(url, {
         credentials: "include" // Incluir cookies na requisição
