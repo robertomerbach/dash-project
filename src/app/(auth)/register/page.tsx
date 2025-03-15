@@ -1,20 +1,18 @@
-import { RegisterContent } from "@/components/layout/register-content"
-import prisma from "@/lib/prisma"
+import { RegisterContent } from "@/components/auth/register-content"
 import Link from "next/link"
 import { redirect } from "next/navigation"
-import { use } from "react"
-
+import { verifyInviteToken, markInviteExpired } from "@/lib/actions/invites"
 
 interface RegisterPageProps {
-  searchParams: Promise<{
-    token?: string  
-  }>
+  searchParams: {
+    token?: string
+  }
 }
 
-export default function RegisterPage({ searchParams }: RegisterPageProps) {
-  const params = use(searchParams)
+export default async function RegisterPage({ searchParams }: RegisterPageProps) {
+  const { token } = searchParams
 
-  if (!params.token) {
+  if (!token) {
     return (
       <RegisterContent
         mode="create"
@@ -29,58 +27,31 @@ export default function RegisterPage({ searchParams }: RegisterPageProps) {
     )
   }
 
-  // Modo de registro por convite (com token)
-  const invitedUser = use(prisma.teamMember.findFirst({
-    where: { 
-      inviteToken: params.token,
-      status: 'PENDING'
-    },
-    select: {
-      id: true,
-      role: true,
-      inviteEmail: true,
-      inviteExpires: true,
-      team: {
-        select: {
-          id: true,
-          name: true
-        }
-      },
-      user: {
-        select: {
-          name: true
-        }
-      }
-    }
-  }))
+  // Verificar token de convite usando server action
+  const inviteInfo = await verifyInviteToken(token)
 
-  if (!invitedUser) {
-    redirect("/login?error=Invalid or expired invitation")
+  // Se o convite for inválido ou expirado, redirecionar para login
+  if (!inviteInfo) {
+    return redirect("/login?error=Invalid or expired invitation")
   }
 
-  if (invitedUser.inviteExpires && invitedUser.inviteExpires < new Date()) {
-    // Remover o convite expirado
-    use(prisma.teamMember.update({
-      where: { id: invitedUser.id },
-      data: { 
-        status: 'EXPIRED',
-        inviteToken: null,
-        inviteExpires: null
-      }
-    }))
-    
-    redirect("/login?error=Invitation expired")
+  // Verificar se o convite expirou
+  if (inviteInfo.expiresAt < new Date()) {
+    // Marcar o convite como expirado
+    await markInviteExpired(inviteInfo.id)
+    return redirect("/login?error=Invitation expired")
   }
 
+  // Se o convite for válido, mostrar o formulário de registro por convite
   return (
     <RegisterContent 
       mode="invite"
       title="Complete your registration"
-      email={invitedUser.inviteEmail || ''}
-      role={invitedUser.role}
-      token={params.token}
-      organizationId={invitedUser.team.id}
-      userName={invitedUser.user?.name || ''}
+      email={inviteInfo.email || ''}
+      role={inviteInfo.role}
+      token={token}
+      teamId={inviteInfo.teamId}
+      teamName={inviteInfo.teamName}
     />
   )
 }

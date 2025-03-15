@@ -2,10 +2,10 @@
 
 import { getServerSession } from "next-auth"
 
-import prisma from "./prisma"
-import { authOptions } from "./auth"
-import { sendInviteEmail } from "./email"
-import { generateToken } from "./utils"
+import prisma from "../prisma"
+import { authOptions } from "../auth"
+import { sendInviteEmail } from "../email"
+import { generateToken } from "../utils"
 
 export type UserRole = "OWNER" | "MEMBER" | "ADMIN"
 export type UserStatus = "PENDING" | "ACTIVE"

@@ -5,8 +5,8 @@ import { ColumnDef } from "@tanstack/react-table"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 
-import { type Site as SiteType } from "@/lib/site"
-import { type User } from "@/lib/user"
+import { type Site as SiteType } from "@/lib/actions/site"
+import { type User } from "@/lib/actions/user"
 
 import { ColumnHeader } from "./columns-header"
 import { RowActions } from "./row-actions"

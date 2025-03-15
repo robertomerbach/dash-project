@@ -6,7 +6,7 @@ import CredentialsProvider from "next-auth/providers/credentials"
 import { compare } from "bcryptjs"
 import prisma from "@/lib/prisma"
 import { UserRole, UserStatus } from "@prisma/client"
-import { createTeamWithOwner } from "@/lib/team"
+import { createTeamWithOwner } from "@/lib/actions/team"
 
 declare module "next-auth" {
   interface Session {

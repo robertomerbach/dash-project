@@ -13,11 +13,11 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 import { Modal } from "@/components/layout/modal"
-import { deleteSite } from "@/lib/site"
+import { deleteSite } from "@/lib/actions/site"
 import { toast } from "sonner"
 import { useForm } from "react-hook-form"
 import { useState } from "react"
-import { updateSite } from "@/lib/site"
+import { updateSite } from "@/lib/actions/site"
 import { Input } from "@/components/ui/input"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog"
