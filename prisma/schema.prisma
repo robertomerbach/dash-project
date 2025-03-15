@@ -19,6 +19,8 @@ model User {
   updatedAt       DateTime     @updatedAt
   resetToken      String?      @unique
   resetTokenExpires DateTime?
+  emailVerificationToken String? @unique
+  emailVerificationExpires DateTime?
   accounts        Account[]
   sessions        Session[]
   teamMembers     TeamMember[] // Relationship with teams

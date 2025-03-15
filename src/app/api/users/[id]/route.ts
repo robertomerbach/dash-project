@@ -25,7 +25,6 @@ export async function GET(
         image: true,
         createdAt: true,
         updatedAt: true,
-        subscription: true,
         teamMembers: {
           include: {
             team: {

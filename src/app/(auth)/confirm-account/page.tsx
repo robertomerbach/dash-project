@@ -87,24 +87,24 @@ export default function ConfirmAccountPage({ searchParams }: Props) {
   }
 
   return (
-      <div className="flex w-full flex-col gap-6">
-        <Suspense fallback={
-          <div className="flex flex-col gap-4">
-            <h2 className="text-center md:text-start text-2xl font-bold">Verifying...</h2>
-            <p className="text-center md:text-start text-muted-foreground">
-              Please wait while we validate your email.
-            </p>
-          </div>
-        }>
-          <ConfirmAccount token={token} redirect_to={redirect_to} />
-        </Suspense>
+    <div className="flex w-full flex-col gap-6">
+      <Suspense fallback={
+        <div className="flex flex-col gap-4">
+          <h2 className="text-center md:text-start text-2xl font-bold">Verifying...</h2>
+          <p className="text-center md:text-start text-muted-foreground">
+            Please wait while we validate your email.
+          </p>
+        </div>
+      }>
+        <ConfirmAccount token={token} redirect_to={redirect_to} />
+      </Suspense>
 
-        <p className="text-center md:text-start text-sm text-muted-foreground [&_a]:underline [&_a]:hover:text-primary">
-          If you have any issues confirming your account, please contact{" "}
-          <Link href="mailto:support@resend.com">
-            support@resend.com
-          </Link>
-        </p>
-      </div>
+      <p className="text-center md:text-start text-sm text-muted-foreground [&_a]:underline [&_a]:hover:text-primary">
+        If you have any issues confirming your account, please contact{" "}
+        <Link href="mailto:support@resend.com">
+          support@resend.com
+        </Link>
+      </p>
+    </div>
   )
 }
