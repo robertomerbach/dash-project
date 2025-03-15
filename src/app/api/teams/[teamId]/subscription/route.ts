@@ -1,13 +1,13 @@
-// app/api/teams/[id]/subscription/route.ts
+// app/api/teams/[teamId]/subscription/route.ts
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 
-// GET /api/teams/[id]/subscription - Get team subscription details
+// GET /api/teams/[teamId]/subscription - Get team subscription details
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { teamId: string } }
 ) {
   const session = await getServerSession(authOptions);
   
@@ -18,7 +18,7 @@ export async function GET(
   // Check if user is member of the team
   const teamMember = await prisma.teamMember.findFirst({
     where: {
-      teamId: params.id,
+      teamId: params.teamId,
       userId: session.user.id,
       status: 'ACTIVE'
     }
@@ -30,7 +30,7 @@ export async function GET(
   
   try {
     const subscription = await prisma.subscription.findUnique({
-      where: { teamId: params.id }
+      where: { teamId: params.teamId }
     });
     
     if (!subscription) {
@@ -43,10 +43,10 @@ export async function GET(
   }
 }
 
-// POST /api/teams/[id]/subscription - Create or update team subscription
+// POST /api/teams/[teamId]/subscription - Create or update team subscription
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { teamId: string } }
 ) {
   const session = await getServerSession(authOptions);
   
@@ -57,7 +57,7 @@ export async function POST(
   // Check if user is admin or owner of the team
   const teamMember = await prisma.teamMember.findFirst({
     where: {
-      teamId: params.id,
+      teamId: params.teamId,
       userId: session.user.id,
       role: { in: ['ADMIN', 'OWNER'] },
       status: 'ACTIVE'
@@ -73,7 +73,7 @@ export async function POST(
     
     // Check if the team already has a subscription
     const existingSubscription = await prisma.subscription.findUnique({
-      where: { teamId: params.id }
+      where: { teamId: params.teamId }
     });
     
     let subscription;
@@ -93,7 +93,7 @@ export async function POST(
       // Create new subscription
       subscription = await prisma.subscription.create({
         data: {
-          teamId: params.id,
+          teamId: params.teamId,
           plan,
           maxAdsSites,
           maxMetricSites

@@ -1,4 +1,4 @@
-// app/api/teams/[id]/members/route.ts
+// app/api/teams/[teamId]/members/route.ts
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -8,7 +8,7 @@ import { randomUUID } from 'crypto';
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { teamId: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -20,7 +20,7 @@ export async function GET(
     // Check if user is member of the team
     const teamMember = await prisma.teamMember.findFirst({
       where: {
-        teamId: params.id,
+        teamId: params.teamId,
         userId: session.user.id,
         status: 'ACTIVE',
       },
@@ -33,7 +33,7 @@ export async function GET(
     // Get all members of the team
     const members = await prisma.teamMember.findMany({
       where: { 
-        teamId: params.id
+        teamId: params.teamId
       },
       include: {
         user: {
@@ -59,7 +59,7 @@ export async function GET(
 
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { teamId: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -71,7 +71,7 @@ export async function POST(
     // Check if user has admin permissions in the team
     const teamMember = await prisma.teamMember.findFirst({
       where: {
-        teamId: params.id,
+        teamId: params.teamId,
         userId: session.user.id,
         status: 'ACTIVE',
         role: { in: ['OWNER', 'ADMIN'] },
@@ -96,7 +96,7 @@ export async function POST(
     // Check if this email is already invited to this team
     const existingInvite = await prisma.teamMember.findFirst({
       where: {
-        teamId: params.id,
+        teamId: params.teamId,
         OR: [
           { user: { email } },
           { inviteEmail: email }
@@ -116,7 +116,7 @@ export async function POST(
     // Create team member invite
     const invite = await prisma.teamMember.create({
       data: {
-        teamId: params.id,
+        teamId: params.teamId,
         userId: existingUser?.id, // Link to existing user if found
         role: role as UserRole,
         status: 'PENDING',

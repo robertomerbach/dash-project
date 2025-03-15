@@ -1,4 +1,4 @@
-// app/api/teams/[id]/members/[memberId]/route.ts
+// app/api/teams/[teamId]/members/[memberId]/route.ts
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -7,7 +7,7 @@ import { UserRole } from '@prisma/client';
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string, memberId: string } }
+  { params }: { params: { teamId: string, memberId: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -19,7 +19,7 @@ export async function GET(
     // Check if user is member of the team
     const teamMember = await prisma.teamMember.findFirst({
       where: {
-        teamId: params.id,
+        teamId: params.teamId,
         userId: session.user.id,
         status: 'ACTIVE',
       },
@@ -33,7 +33,7 @@ export async function GET(
     const member = await prisma.teamMember.findFirst({
       where: { 
         id: params.memberId,
-        teamId: params.id
+        teamId: params.teamId
       },
       include: {
         user: {
@@ -60,7 +60,7 @@ export async function GET(
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string, memberId: string } }
+  { params }: { params: { teamId: string, memberId: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -72,7 +72,7 @@ export async function PATCH(
     // Check if user has admin permissions in the team
     const currentMember = await prisma.teamMember.findFirst({
       where: {
-        teamId: params.id,
+        teamId: params.teamId,
         userId: session.user.id,
         status: 'ACTIVE',
         role: { in: ['OWNER', 'ADMIN'] },
@@ -88,7 +88,7 @@ export async function PATCH(
       where: { id: params.memberId },
     });
     
-    if (!memberToUpdate || memberToUpdate.teamId !== params.id) {
+    if (!memberToUpdate || memberToUpdate.teamId !== params.teamId) {
       return NextResponse.json({ error: 'Team member not found' }, { status: 404 });
     }
     
@@ -108,7 +108,7 @@ export async function PATCH(
     if (memberToUpdate.role === 'OWNER' && role !== 'OWNER') {
       const ownerCount = await prisma.teamMember.count({
         where: {
-          teamId: params.id,
+          teamId: params.teamId,
           role: 'OWNER',
           status: 'ACTIVE',
         },
@@ -146,7 +146,7 @@ export async function PATCH(
 
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string, memberId: string } }
+  { params }: { params: { teamId: string, memberId: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -160,7 +160,7 @@ export async function DELETE(
     // Check permissions - either admin/owner or the member themselves
     const currentMember = await prisma.teamMember.findFirst({
       where: {
-        teamId: params.id,
+        teamId: params.teamId,
         userId: currentUserId,
         status: 'ACTIVE',
       },
@@ -175,7 +175,7 @@ export async function DELETE(
       where: { id: params.memberId },
     });
     
-    if (!memberToDelete || memberToDelete.teamId !== params.id) {
+    if (!memberToDelete || memberToDelete.teamId !== params.teamId) {
       return NextResponse.json({ error: 'Team member not found' }, { status: 404 });
     }
     
@@ -191,7 +191,7 @@ export async function DELETE(
     if (memberToDelete.role === 'OWNER') {
       const ownerCount = await prisma.teamMember.count({
         where: {
-          teamId: params.id,
+          teamId: params.teamId,
           role: 'OWNER',
           status: 'ACTIVE',
         },
@@ -211,7 +211,7 @@ export async function DELETE(
     if (isSelf && !isAdmin) {
       // Get all sites for this team
       const teamSites = await prisma.site.findMany({
-        where: { teamId: params.id },
+        where: { teamId: params.teamId },
         select: { id: true },
       });
       

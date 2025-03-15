@@ -1,4 +1,4 @@
-// app/api/teams/[id]/sites/[siteId]/route.ts
+// app/api/teams/[teamId]/sites/[siteId]/route.ts
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { SiteStatus } from '@prisma/client';
@@ -7,7 +7,7 @@ import { authOptions } from '@/lib/auth';
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string, siteId: string } }
+  { params }: { params: { teamId: string, siteId: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -19,7 +19,7 @@ export async function GET(
     // Check if user is member of the team
     const teamMember = await prisma.teamMember.findFirst({
       where: {
-        teamId: params.id,
+        teamId: params.teamId,
         userId: session.user.id,
         status: 'ACTIVE',
       },
@@ -33,7 +33,7 @@ export async function GET(
     const site = await prisma.site.findFirst({
       where: { 
         id: params.siteId,
-        teamId: params.id
+        teamId: params.teamId
       },
       include: {
         users: {
@@ -64,7 +64,7 @@ export async function GET(
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string, siteId: string } }
+  { params }: { params: { teamId: string, siteId: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -76,7 +76,7 @@ export async function PATCH(
     // Check if user has admin permissions for the team
     const teamMember = await prisma.teamMember.findFirst({
       where: {
-        teamId: params.id,
+        teamId: params.teamId,
         userId: session.user.id,
         status: 'ACTIVE',
         role: { in: ['OWNER', 'ADMIN'] },
@@ -91,7 +91,7 @@ export async function PATCH(
     const siteExists = await prisma.site.findFirst({
       where: { 
         id: params.siteId,
-        teamId: params.id
+        teamId: params.teamId
       },
     });
     
@@ -133,7 +133,7 @@ export async function PATCH(
 
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string, siteId: string } }
+  { params }: { params: { teamId: string, siteId: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -145,7 +145,7 @@ export async function DELETE(
     // Check if user has admin permissions for the team
     const teamMember = await prisma.teamMember.findFirst({
       where: {
-        teamId: params.id,
+        teamId: params.teamId,
         userId: session.user.id,
         status: 'ACTIVE',
         role: { in: ['OWNER', 'ADMIN'] },
@@ -160,7 +160,7 @@ export async function DELETE(
     const site = await prisma.site.findFirst({
       where: { 
         id: params.siteId,
-        teamId: params.id
+        teamId: params.teamId
       },
     });
     

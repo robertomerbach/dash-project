@@ -1,14 +1,14 @@
-// app/api/teams/[id]/sites/route.ts
+// app/api/teams/[teamId]/sites/route.ts
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { SiteStatus } from '@prisma/client';
 
-// GET /api/teams/[id]/sites - Get all sites for a team
+// GET /api/teams/[teamId]/sites - Get all sites for a team
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { teamId: string } }
 ) {
   const session = await getServerSession(authOptions);
   
@@ -19,7 +19,7 @@ export async function GET(
   // Check if user is member of the team
   const teamMember = await prisma.teamMember.findFirst({
     where: {
-      teamId: params.id,
+      teamId: params.teamId,
       userId: session.user.id,
       status: 'ACTIVE',
     },
@@ -31,7 +31,7 @@ export async function GET(
 
   const sites = await prisma.site.findMany({
     where: { 
-      teamId: params.id 
+      teamId: params.teamId 
     },
     include: {
       _count: {
@@ -48,10 +48,10 @@ export async function GET(
   return NextResponse.json({ sites });
 }
 
-// POST /api/teams/[id]/sites - Create a new site for a team
+// POST /api/teams/[teamId]/sites - Create a new site for a team
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { teamId: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -63,7 +63,7 @@ export async function POST(
     // Check if user has admin permissions in the team
     const teamMember = await prisma.teamMember.findFirst({
       where: {
-        teamId: params.id,
+        teamId: params.teamId,
         userId: session.user.id,
         status: 'ACTIVE',
         role: { in: ['OWNER', 'ADMIN'] },
@@ -76,7 +76,7 @@ export async function POST(
     
     // Check subscription limits
     const teamSubscription = await prisma.subscription.findUnique({
-      where: { teamId: params.id },
+      where: { teamId: params.teamId },
     });
     
     if (!teamSubscription) {
@@ -85,7 +85,7 @@ export async function POST(
     
     // Count current sites
     const sitesCount = await prisma.site.count({
-      where: { teamId: params.id },
+      where: { teamId: params.teamId },
     });
     
     if (sitesCount >= teamSubscription.maxAdsSites) {
@@ -114,7 +114,7 @@ export async function POST(
         name,
         url,
         status: status as SiteStatus,
-        teamId: params.id,
+        teamId: params.teamId,
       },
     });
     

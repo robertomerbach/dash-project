@@ -1,13 +1,13 @@
-// app/api/teams/[id]/route.ts
+// app/api/teams/[teamId]/route.ts
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 
-// GET /api/teams/[id] - Get team details
+// GET /api/teams/[teamId] - Get team details
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { teamId: string } }
 ) {
   const session = await getServerSession(authOptions);
   
@@ -18,8 +18,8 @@ export async function GET(
   // Check if user is member of the team
   const teamMember = await prisma.teamMember.findFirst({
     where: {
-      teamId: params.id,
-      userId: session.user.id,
+      teamId: params.teamId,
+      userId: session.user.teamId,
       status: 'ACTIVE'
     }
   });
@@ -30,7 +30,7 @@ export async function GET(
   
   try {
     const team = await prisma.team.findUnique({
-      where: { id: params.id },
+      where: { id: params.teamId },
       include: {
         subscription: true,
         sites: true,
@@ -60,10 +60,10 @@ export async function GET(
   }
 }
 
-// PATCH /api/teams/[id] - Update team details
+// PATCH /api/teams/[teamId] - Update team details
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { teamId: string } }
 ) {
   const session = await getServerSession(authOptions);
   
@@ -74,8 +74,8 @@ export async function PATCH(
   // Check if user is admin or owner of the team
   const teamMember = await prisma.teamMember.findFirst({
     where: {
-      teamId: params.id,
-      userId: session.user.id,
+      teamId: params.teamId,
+      userId: session.user.teamId,
       role: { in: ['ADMIN', 'OWNER'] },
       status: 'ACTIVE'
     }
@@ -89,7 +89,7 @@ export async function PATCH(
     const { name, allowedDomains, language, timezone, autoTimezone, currency } = await req.json();
     
     const updatedTeam = await prisma.team.update({
-      where: { id: params.id },
+      where: { id: params.teamId },
       data: {
         name: name || undefined,
         allowedDomains: allowedDomains !== undefined ? allowedDomains : undefined,
@@ -107,10 +107,10 @@ export async function PATCH(
   }
 }
 
-// DELETE /api/teams/[id] - Delete team
+// DELETE /api/teams/[teamId] - Delete team
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { teamId: string } }
 ) {
   const session = await getServerSession(authOptions);
   
@@ -121,7 +121,7 @@ export async function DELETE(
   // Check if user is owner of the team
   const teamMember = await prisma.teamMember.findFirst({
     where: {
-      teamId: params.id,
+      teamId: params.teamId,
       userId: session.user.id,
       role: 'OWNER',
       status: 'ACTIVE'
@@ -135,7 +135,7 @@ export async function DELETE(
   try {
     // Delete the team (this will cascade delete all related records)
     await prisma.team.delete({
-      where: { id: params.id }
+      where: { id: params.teamId }
     });
     
     return NextResponse.json({ success: true });
