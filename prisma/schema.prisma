@@ -9,21 +9,21 @@ datasource db {
 
 // Model of User
 model User {
-  id              String         @id @default(cuid())
+  id              String       @id @default(cuid())
   name            String?
-  email           String?        @unique
+  email           String?      @unique
   emailVerified   DateTime?
   password        String?
   image           String?
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-  resetToken      String?        @unique
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  resetToken      String?      @unique
   resetTokenExpires DateTime?
   accounts        Account[]
   sessions        Session[]
-  teamMembers     TeamMember[]   // Relationship with teams
-  siteUsers       SiteUser[]     // Relationship with sites
-  subscription    Subscription?  // User subscription
+  teamMembers     TeamMember[] // Relationship with teams
+  siteUsers       SiteUser[]   // Relationship with sites
+  // Subscription removida daqui
 }
 
 // Model of Account (Auth.js)
@@ -58,17 +58,18 @@ model Session {
 
 // Model of Team
 model Team {
-  id              String        @id @default(cuid())
-  name            String
-  allowedDomains  String?       // Allowed email domains for automatic invitations
-  language        String        @default("en")
-  timezone        String        @default("America/New_York")
-  autoTimezone    Boolean       @default(true)
-  currency        String        @default("USD")
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  members         TeamMember[]  // Team members
-  sites           Site[]        // Sites of the team
+  id               String       @id @default(cuid())
+  name             String
+  allowedDomains   String?      // Allowed email domains for automatic invitations
+  language         String       @default("en")
+  timezone         String       @default("America/New_York")
+  autoTimezone     Boolean      @default(true)
+  currency         String       @default("USD")
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  members          TeamMember[] // Team members
+  sites            Site[]       // Sites of the team
+  subscription     Subscription? // Relação com subscription
 
   @@map("teams")
 }
@@ -123,19 +124,20 @@ model SiteUser {
 
 // Model of Subscription
 model Subscription {
-  id              String            @id @default(cuid())
-  userId          String            @unique
-  plan            SubscriptionPlan
-  maxAdsSites     Int
-  maxMetricSites  Int
-  startDate       DateTime          @default(now())
-  endDate         DateTime?
-  status          SubscriptionStatus @default(ACTIVE)
-  stripeCustomerId String?           @unique
-  stripeSubscriptionId String?       @unique
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                  String              @id @default(cuid())
+  teamId              String              @unique // Alterado de userId para teamId
+  plan                SubscriptionPlan
+  maxAdsSites         Int
+  maxMetricSites      Int
+  startDate           DateTime            @default(now())
+  endDate             DateTime?
+  status              SubscriptionStatus  @default(ACTIVE)
+  stripeCustomerId    String?             @unique
+  stripeSubscriptionId String?            @unique
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  team                Team                @relation(fields: [teamId], references: [id], onDelete: Cascade) 
+  //user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 // Enums

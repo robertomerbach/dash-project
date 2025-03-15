@@ -57,7 +57,7 @@ const SimpleNavItem = memo(
         <SidebarMenuButton
           tooltip={item.title}
           className={cn(
-            isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : "",
+            isActive ? "bg-accent text-sidebar-accent-foreground" : "",
             "rounded-md",
             className,
           )}

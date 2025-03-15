@@ -1,11 +1,11 @@
 // app/api/auth/password/route.ts
 import { NextResponse } from "next/server";
-import { hash, compare } from "bcrypt";
-import { prisma } from "@/lib/prisma";
-import { z } from "zod";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../[...nextauth]/route";
+import { hash, compare } from "bcrypt";
+import { z } from "zod";
 import { randomUUID } from "crypto";
+import prisma from "@/lib/prisma";
+import { authOptions } from "@/lib/auth";
 import { sendEmail } from "@/lib/email";
 
 // Schema para recuperação de senha
@@ -15,7 +15,7 @@ const forgotPasswordSchema = z.object({
 
 // Schema para redefinição de senha
 const resetPasswordSchema = z.object({
-  token: z.string().uuid(),
+  token: z.string(),
   password: z.string().min(8).max(100),
 });
 
@@ -55,27 +55,27 @@ export async function POST(req: Request) {
     }
     
     // Gerar token de redefinição de senha
-    const token = randomUUID();
-    const expiresAt = new Date();
-    expiresAt.setHours(expiresAt.getHours() + 1); // Expira em 1 hora
+    const resetToken = randomUUID();
+    const resetTokenExpires = new Date();
+    resetTokenExpires.setHours(resetTokenExpires.getHours() + 1); // Expira em 1 hora
     
-    // Salvar token no banco de dados
-    await prisma.passwordReset.create({
+    // Salvar token diretamente no usuário
+    await prisma.user.update({
+      where: { id: user.id },
       data: {
-        userId: user.id,
-        token,
-        expiresAt,
+        resetToken,
+        resetTokenExpires,
       },
     });
     
     // Enviar email
-    const resetLink = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${token}`;
+    const resetLink = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${resetToken}`;
     await sendEmail({
       to: email,
       subject: "Redefinição de Senha",
       html: `
         <h1>Redefinição de Senha</h1>
-        <p>Olá ${user.name},</p>
+        <p>Olá ${user.name || "usuário"},</p>
         <p>Você solicitou a redefinição de senha para sua conta no Dashboard.</p>
         <p>Clique no link abaixo para redefinir sua senha:</p>
         <a href="${resetLink}">Redefinir Senha</a>
@@ -116,15 +116,14 @@ export async function PATCH(req: Request) {
       const { token, password } = validation.data;
       
       // Verificar se o token é válido
-      const resetToken = await prisma.passwordReset.findUnique({
+      const user = await prisma.user.findFirst({
         where: { 
-          token,
-          expiresAt: { gt: new Date() },
-          used: false
+          resetToken: token,
+          resetTokenExpires: { gt: new Date() },
         }
       });
       
-      if (!resetToken) {
+      if (!user) {
         return NextResponse.json(
           { error: "Token inválido ou expirado" },
           { status: 400 }
@@ -134,16 +133,14 @@ export async function PATCH(req: Request) {
       // Hash da nova senha
       const hashedPassword = await hash(password, 12);
       
-      // Atualizar senha do usuário
+      // Atualizar senha do usuário e limpar token
       await prisma.user.update({
-        where: { id: resetToken.userId },
-        data: { password: hashedPassword }
-      });
-      
-      // Marcar token como usado
-      await prisma.passwordReset.update({
-        where: { id: resetToken.id },
-        data: { used: true }
+        where: { id: user.id },
+        data: { 
+          password: hashedPassword,
+          resetToken: null,
+          resetTokenExpires: null
+        }
       });
       
       return NextResponse.json(
@@ -165,3 +162,50 @@ export async function PATCH(req: Request) {
           { status: 400 }
         );
       }
+      
+      const { currentPassword, newPassword } = validation.data;
+      
+      // Buscar usuário
+      const user = await prisma.user.findUnique({
+        where: { id: session.user.id }
+      });
+      
+      if (!user || !user.password) {
+        return NextResponse.json(
+          { error: "Usuário não encontrado ou não possui senha" },
+          { status: 400 }
+        );
+      }
+      
+      // Verificar se a senha atual está correta
+      const isPasswordValid = await compare(currentPassword, user.password);
+      
+      if (!isPasswordValid) {
+        return NextResponse.json(
+          { error: "Senha atual incorreta" },
+          { status: 400 }
+        );
+      }
+      
+      // Hash da nova senha
+      const hashedPassword = await hash(newPassword, 12);
+      
+      // Atualizar senha
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { password: hashedPassword }
+      });
+      
+      return NextResponse.json(
+        { message: "Senha alterada com sucesso" },
+        { status: 200 }
+      );
+    }
+  } catch (error) {
+    console.error("Erro ao processar alteração de senha:", error);
+    return NextResponse.json(
+      { error: "Erro interno do servidor" },
+      { status: 500 }
+    );
+  }
+}

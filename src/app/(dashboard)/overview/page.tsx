@@ -2,11 +2,11 @@
 
 import { useState } from "react"
 import { startOfMonth, endOfMonth } from "date-fns"
-import { DashboardHeader } from "@/components/layout/dashboard-header"
-import { DashboardCards } from "@/components/layout/dashboard-cards"
-import { DashboardChart } from "@/components/layout/dashboard-chart"
-import { DashboardCountries } from "@/components/layout/dashboard-countries"
-import { DashboardSkeleton, DashboardChartsSkeleton } from "@/components/layout/dashboard-skeleton"
+import { DashboardHeader } from "@/components/dashboard/dashboard-header"
+import { DashboardCards } from "@/components/dashboard/dashboard-cards"
+import { DashboardChart } from "@/components/dashboard/dashboard-chart"
+import { DashboardCountries } from "@/components/dashboard/dashboard-countries"
+import { DashboardSkeleton, DashboardChartsSkeleton } from "@/components/dashboard/dashboard-skeleton"
 import { useMetrics, aggregateMetricsByDate, aggregateMetricsByCountry } from "@/hooks/use-metrics"
 
 export default function DashboardPage() {

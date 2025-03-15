@@ -3,16 +3,19 @@ import { ReactNode } from "react"
 import { AppSidebar } from "@/components/layout/sidebar"
 import { AppHeader } from "@/components/layout/header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
+import { cookies } from "next/headers"
 
-export default function Layout({ children }: { children: ReactNode }) {
-  
+export default async function Layout({ children }: { children: ReactNode }) {
+  const cookieStore = await cookies()
+  const defaultOpen = cookieStore.get("sidebar_state")?.value === "true"
+
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={defaultOpen}>
       <AppSidebar />
       <SidebarInset>
         {/* <NotificationProvider> */}
           <AppHeader />
-          <div className="flex flex-1 flex-col space-y-5 mx-auto w-full max-w-full md:max-w-6xl p-8">
+          <div className="flex flex-1 flex-col space-y-5 mx-auto w-full max-w-full p-8">
             {children}
           </div>
         {/* </NotificationProvider> */}

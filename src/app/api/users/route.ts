@@ -1,14 +1,29 @@
+// app/api/users/route.ts
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
+import { hash } from 'bcrypt';
 
 // GET /api/users - Obter todos os usuários (apenas para admin)
 export async function GET() {
   const session = await getServerSession(authOptions);
   
-  if (!session || session.user.role !== 'ADMIN') {
+  if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  
+  // Verificar se o usuário é ADMIN ou OWNER em algum time
+  const isAdmin = await prisma.teamMember.findFirst({
+    where: {
+      userId: session.user.id,
+      role: { in: ['ADMIN', 'OWNER'] },
+      status: 'ACTIVE'
+    }
+  });
+  
+  if (!isAdmin) {
+    return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
   }
   
   try {
@@ -20,6 +35,17 @@ export async function GET() {
         image: true,
         createdAt: true,
         updatedAt: true,
+        teamMembers: {
+          select: {
+            role: true,
+            team: {
+              select: {
+                id: true,
+                name: true
+              }
+            }
+          }
+        }
       }
     });
     
@@ -33,12 +59,28 @@ export async function GET() {
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   
-  if (!session || session.user.role !== 'ADMIN') {
+  if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   
+  // Verificar se o usuário é ADMIN ou OWNER em algum time
+  const adminTeamMember = await prisma.teamMember.findFirst({
+    where: {
+      userId: session.user.id,
+      role: { in: ['ADMIN', 'OWNER'] },
+      status: 'ACTIVE'
+    },
+    include: {
+      team: true
+    }
+  });
+  
+  if (!adminTeamMember) {
+    return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
+  }
+  
   try {
-    const { name, email, password, role } = await req.json();
+    const { name, email, password, teamRole = 'MEMBER' } = await req.json();
     
     // Validação básica
     if (!name || !email || !password) {
@@ -54,22 +96,35 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Email already in use' }, { status: 400 });
     }
     
+    // Hash da senha
+    const hashedPassword = await hash(password, 12);
+    
     // Criar usuário
     const user = await prisma.user.create({
       data: {
         name,
         email,
-        password, // Em produção, deve ser hasheado
+        password: hashedPassword,
+        // Adicionar o usuário ao time do admin
+        teamMembers: {
+          create: {
+            teamId: adminTeamMember.teamId,
+            role: teamRole as 'OWNER' | 'ADMIN' | 'MEMBER',
+            status: 'ACTIVE'
+          }
+        }
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        createdAt: true
       }
     });
     
-    return NextResponse.json({ 
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      createdAt: user.createdAt 
-    }, { status: 201 });
+    return NextResponse.json(user, { status: 201 });
   } catch (error) {
+    console.error('Failed to create user:', error);
     return NextResponse.json({ error: 'Failed to create user' }, { status: 500 });
   }
 }

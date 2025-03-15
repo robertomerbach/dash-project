@@ -1,24 +1,25 @@
 // app/api/auth/invites/route.ts
-import { NextResponse } from "next/server";
-import { hash } from "bcrypt";
-import { prisma } from "@/lib/prisma";
-import { z } from "zod";
-import { getServerSession } from "next-auth";
-import { authOptions } from "../[...nextauth]/route";
+import { NextResponse } from "next/server"
+import { hash } from "bcrypt"
+import prisma from "@/lib/prisma"
+import { z } from "zod"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
+import { randomUUID } from "crypto"
 
 // Schema para processamento de convites
 const inviteProcessSchema = z.object({
   name: z.string().min(3).max(100),
   email: z.string().email(),
   password: z.string().min(8).max(100),
-  token: z.string().uuid(),
+  token: z.string(),
 });
 
 // Schema para criação de convites
 const createInviteSchema = z.object({
   email: z.string().email(),
   teamId: z.string().cuid(),
-  role: z.enum(["OWNER", "ADMIN", "MEMBER", "VIEWER"]).default("MEMBER"),
+  role: z.enum(["OWNER", "ADMIN", "MEMBER"]).default("MEMBER"), // Removido VIEWER que não existe no schema
 });
 
 // GET: Listar convites para o usuário atual
@@ -43,11 +44,11 @@ export async function GET() {
   const teamIds = userTeams.map(team => team.teamId);
   
   // Buscar convites pendentes para essas equipes
-  const invites = await prisma.teamInvite.findMany({
+  const invites = await prisma.teamMember.findMany({
     where: {
       teamId: { in: teamIds },
       status: "PENDING",
-      expiresAt: { gt: new Date() }
+      inviteExpires: { gt: new Date() } // Corrigido: expiresAt → inviteExpires
     },
     include: {
       team: {
@@ -81,10 +82,10 @@ export async function POST(req: Request) {
       const { name, email, password, token } = validation.data;
       
       // Verificar se o token de convite é válido
-      const invite = await prisma.teamInvite.findUnique({
+      const invite = await prisma.teamMember.findFirst({
         where: { 
-          token,
-          expiresAt: { gt: new Date() },
+          inviteToken: token, // Corrigido: token → inviteToken
+          inviteExpires: { gt: new Date() }, // Corrigido: expiresAt → inviteExpires
           status: "PENDING"
         },
         include: {
@@ -131,10 +132,10 @@ export async function POST(req: Request) {
             name,
             email,
             password: hashedPassword,
-            role: "USER",
+            // Removido campo role que não existe no modelo User
             subscription: {
               create: {
-                plan: "FREE",
+                plan: "BASIC", // Corrigido: FREE → BASIC conforme enum SubscriptionPlan
                 status: "ACTIVE",
                 maxAdsSites: 1,
                 maxMetricSites: 3,
@@ -146,20 +147,15 @@ export async function POST(req: Request) {
         userId = newUser.id;
       }
       
-      // Adicionar usuário à equipe
-      await prisma.teamMember.create({
-        data: {
-          userId: userId,
-          teamId: invite.teamId,
-          role: invite.role || "MEMBER",
-          status: "ACTIVE"
-        }
-      });
-      
-      // Atualizar status do convite
-      await prisma.teamInvite.update({
+      // Atualizar o convite para associar ao usuário
+      await prisma.teamMember.update({
         where: { id: invite.id },
-        data: { status: "ACCEPTED" }
+        data: { 
+          userId: userId,
+          status: "ACTIVE", // Corrigido: ACCEPTED → ACTIVE conforme enum UserStatus
+          inviteToken: null, // Limpar o token de convite
+          inviteExpires: null // Limpar a expiração
+        }
       });
       
       return NextResponse.json(
@@ -205,16 +201,16 @@ export async function POST(req: Request) {
       }
       
       // Criar convite
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + 7); // Expira em 7 dias
+      const inviteExpires = new Date(); // Corrigido: expiresAt → inviteExpires
+      inviteExpires.setDate(inviteExpires.getDate() + 7); // Expira em 7 dias
       
-      const invite = await prisma.teamInvite.create({
+      const invite = await prisma.teamMember.create({
         data: {
           teamId,
-          email,
+          inviteEmail: email, // Corrigido: email → inviteEmail
           role,
-          token: crypto.randomUUID(),
-          expiresAt,
+          inviteToken: randomUUID(), // Corrigido: token → inviteToken
+          inviteExpires, // Corrigido: expiresAt → inviteExpires
           status: "PENDING"
         }
       });
@@ -226,8 +222,8 @@ export async function POST(req: Request) {
           message: "Convite enviado com sucesso",
           invite: {
             id: invite.id,
-            email: invite.email,
-            expiresAt: invite.expiresAt
+            email: invite.inviteEmail, // Corrigido: email → inviteEmail
+            expiresAt: invite.inviteExpires // Corrigido: expiresAt → inviteExpires
           }
         },
         { status: 201 }
