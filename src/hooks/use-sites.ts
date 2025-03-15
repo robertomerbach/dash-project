@@ -98,7 +98,7 @@ export function useSites(teamId?: string) {
   const updateSiteMutation = useMutation({
     mutationFn: async (data: UpdateSiteInput) => {
       try {
-        const response = await axios.patch(`/api/sites/${data.id}`, data);
+        const response = await axios.patch(`/api/teams/${teamId}/sites/${data.id}`, data);
         return response.data as Site;
       } catch (error) {
         if (axios.isAxiosError(error)) {
@@ -117,7 +117,7 @@ export function useSites(teamId?: string) {
   const deleteSiteMutation = useMutation({
     mutationFn: async (siteId: string) => {
       try {
-        await axios.delete(`/api/sites/${siteId}`);
+        await axios.delete(`/api/teams/${teamId}/sites/${siteId}`);
         return siteId;
       } catch (error) {
         if (axios.isAxiosError(error)) {

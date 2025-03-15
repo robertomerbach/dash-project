@@ -134,7 +134,7 @@ export function useTeams() {
     queryKey: teamKeys.lists(),
     queryFn: async () => {
       try {
-        const response = await axios.get('/api/users/teams');
+        const response = await axios.get('/api/teams');
         return response.data as TeamMemberWithTeam[];
       } catch (error) {
         if (axios.isAxiosError(error)) {
